@@ -1,18 +1,21 @@
-using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Net.Sockets;
+using System.Net;
+using System;
 
 public class UdpConnection
 {
     private struct DataReceived
     {
         public byte[] data;
+
         public IPEndPoint ipEndPoint;
     }
 
     private readonly UdpClient connection;
+    
     private IReceiveData receiver = null;
+    
     private Queue<DataReceived> dataReceivedQueue = new Queue<DataReceived>();
 
     object handler = new object();
@@ -29,6 +32,7 @@ public class UdpConnection
     public UdpConnection(IPAddress ip, int port, IReceiveData receiver = null)
     {
         connection = new UdpClient();
+        
         connection.Connect(ip, port);
 
         this.receiver = receiver;
@@ -48,8 +52,11 @@ public class UdpConnection
             while (dataReceivedQueue.Count > 0)
             {
                 DataReceived dataReceived = dataReceivedQueue.Dequeue();
-                if (receiver != null)
+
+                if (receiver != null) 
+                {
                     receiver.OnReceiveData(dataReceived.data, dataReceived.ipEndPoint);
+                }
             }
         }
     }
@@ -59,6 +66,7 @@ public class UdpConnection
         try
         {
             DataReceived dataReceived = new DataReceived();
+            
             dataReceived.data = connection.EndReceive(ar, ref dataReceived.ipEndPoint);
 
             lock (handler)
