@@ -3,6 +3,10 @@ using System;
 
 using UnityEngine;
 
+//Hay que hacer un mensaje "string" para el mensaje de consola
+//La idea serìa cuando vas a mandar el string serializado tenes que poner cuantos chars tiene y despues ir recuperando los char con un for
+//Sistema que sepa discriminar entre dos tipos de mensaje (uno de consola y el handshake)
+
 public enum MessageType
 {
     HandShake = -1,
