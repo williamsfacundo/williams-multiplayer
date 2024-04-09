@@ -1,9 +1,11 @@
 ﻿using System.Net;
+
 using UnityEngine.UI;
 
 public class ChatScreen : MonoBehaviourSingleton<ChatScreen>
 {
     public Text messages;
+
     public InputField inputMessage;
 
     protected override void Initialize()

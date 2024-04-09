@@ -1,24 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
+using System;
+
 using UnityEngine;
 
 public struct Client
 {
-    public float timeStamp;
-    public int id;
     public IPEndPoint ipEndPoint;
 
+    public float timeStamp;
+
+    public int id;
+    
     public Client(IPEndPoint ipEndPoint, int id, float timeStamp)
     {
         this.timeStamp = timeStamp;
+        
         this.id = id;
+        
         this.ipEndPoint = ipEndPoint;
     }
 }
 
 public class NetworkManager : MonoBehaviourSingleton<NetworkManager>, IReceiveData
 {
+    public Action<byte[], IPEndPoint> OnReceiveEvent;
+    
+    public int TimeOut = 30;
+    
+    private readonly Dictionary<int, Client> clients = new Dictionary<int, Client>();
+    
+    private readonly Dictionary<IPEndPoint, int> ipToId = new Dictionary<IPEndPoint, int>();
+    
+    private UdpConnection connection;
+
+    private int clientId = 0; // This id should be generated during first handshake
+
     public IPAddress ipAddress
     {
         get; private set;
@@ -32,36 +49,27 @@ public class NetworkManager : MonoBehaviourSingleton<NetworkManager>, IReceiveDa
     public bool isServer
     {
         get; private set;
-    }
-
-    public int TimeOut = 30;
-
-    public Action<byte[], IPEndPoint> OnReceiveEvent;
-
-    private UdpConnection connection;
-
-    private readonly Dictionary<int, Client> clients = new Dictionary<int, Client>();
-    private readonly Dictionary<IPEndPoint, int> ipToId = new Dictionary<IPEndPoint, int>();
-
-    int clientId = 0; // This id should be generated during first handshake
+    }    
 
     public void StartServer(int port)
     {
-        isServer = true;
         this.port = port;
+        
+        isServer = true;
+        
         connection = new UdpConnection(port, this);
     }
 
     public void StartClient(IPAddress ip, int port)
     {
-        isServer = false;
-
         this.port = port;
         this.ipAddress = ip;
 
+        isServer = false;
+        
         connection = new UdpConnection(ip, port, this);
 
-        AddClient(new IPEndPoint(ip, port));
+        AddClient(new IPEndPoint(ip, port)); //Soy yo quien me agrego como cliente? O mando un handshake para preguntar al server para que me agregue
     }
 
     void AddClient(IPEndPoint ip)
@@ -71,6 +79,7 @@ public class NetworkManager : MonoBehaviourSingleton<NetworkManager>, IReceiveDa
             Debug.Log("Adding client: " + ip.Address);
 
             int id = clientId;
+
             ipToId[ip] = clientId;
 
             clients.Add(clientId, new Client(ip, id, Time.realtimeSinceStartup));
